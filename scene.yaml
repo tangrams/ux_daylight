@@ -28,6 +28,10 @@ layers:
         draw:
             spheremap:
                 order: 0
+            lines:
+                visible: global.lines
+                color: red
+                width: 1.5px
     water:
         data: { source: osm }
         draw:
@@ -37,7 +41,6 @@ layers:
         data: { source: osm }
         draw:
             dots:
-                visible: global.lines
                 color: red
                 width: 1px
 
