@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Atmospheric Scattering</title>
+        <!-- 3rd party libraries -->
+            <!-- Leaflet -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.1/leaflet.css" />
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.1/leaflet.js"></script>
+            <!-- bog-standard leaflet URL hash -->
+            <script type="text/javascript" src="https://cdn.rawgit.com/mlevans/leaflet-hash/master/leaflet-hash.js"></script>
+            <!-- Main tangram library -->
+            <script type="text/javascript" src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
+            <!-- Load geocoding plugin after Leaflet -->
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.css">
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.js"></script>
+            <script type="text/javascript" src="https://rawgit.com/patriciogonzalezvivo/glslCanvas/master/build/GlslCanvas.js"></script>
+
+        <!-- End of 3rd party libraries -->
+
+        <style>
+            body {
+                margin: 0px;
+                border: 0px;
+                padding: 0px;
+            }
+            #map {
+                background: rgba(0, 0, 0, 0);
+                height: 100%;
+                width: 100%;
+                position: absolute;
+            }
+            .glslCanvas {
+                position: absolute;
+                background-color: rgba(1, 1, 1, 0);
+                z-index: 10000;
+                top: 0px;
+                right: 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas class="glslCanvas" data-fragment-url="shader.frag" width="500" height="500"></canvas>
+        <div id="map"></div>
+
+        <!-- Demo module -->
+        <script type="text/javascript">
+            var map = (function () {
+                'use strict';
+
+                var map_start_location = [-24.98,-62.53, 3.6];
+
+                /*** URL parsing ***/
+
+                // leaflet-style URL hash pattern:
+                // ?style.yaml#[zoom],[lat],[lng]
+                var url_hash = window.location.hash.slice(1).split('/');
+                if (url_hash.length == 3) {
+                    map_start_location = [url_hash[1],url_hash[2], url_hash[0]];
+                    // convert from strings
+                    map_start_location = map_start_location.map(Number);
+                }
+
+                var animated = true;
+                var url_search = window.location.search.slice(1);
+                if (url_search.length > 0) {
+                    if (url_search.indexOf('animated=false') > -1) {
+                        animated = false;
+                    }
+                }
+
+                /*** Map ***/
+                var map = L.map('map', {
+                    maxZoom: 20,
+                    trackResize: true,
+                    keyboard: false
+                });
+                L.control.geocoder('mapzen-YoRQaZF',{pointIcon: false, markers: false}).addTo(map);
+
+                var layer = Tangram.leafletLayer({
+                    scene: 'scene.yaml',
+                    introspection: true,
+                    attribution: '&copy; OSM contributors | <a href="https://mapzen.com" target="_blank">Mapzen</a> | <a href="http://jenlowe.net/" target="_blank">@datatelling</a> & <a href="http://patricio.io" target="_blank">@patriciogv</a>'
+                });
+
+                window.layer = layer;
+                var scene = layer.scene;
+                window.scene = scene;
+
+                map.setView(map_start_location.slice(0, 2), map_start_location[2]);
+                var hash = new L.Hash(map);
+
+                // Resize map to window
+                function resizeMap() {
+                    document.getElementById('map').style.width = window.innerWidth + 'px';
+                    document.getElementById('map').style.height = window.innerHeight + 'px';
+                    map.invalidateSize(false);
+                }
+
+                window.addEventListener('resize', resizeMap);
+                resizeMap();
+
+                window.addEventListener('load', function () {
+                    layer.addTo(map);
+                });
+
+                // document.getElementsByClassName("glslCanvas")[0].addEventListener('mousemove', function() {
+                //     console.log("update");
+                //     scene.loadTextures();
+                // });
+
+                return map;
+            }());
+
+            //code before the pause
+            setTimeout(function(){
+                glslCanvases[0].on("render", function() {
+                    if (scene) {
+                        scene.loadTextures();
+                    }
+                })
+            }, 2000);
+
+            
+        </script>
+
+        <!-- Adding a script block to post message to the parent container (think iframed demos) -->
+        <script type="text/javascript">
+          window.addEventListener("hashchange",function(){parent.postMessage(window.location.hash, "*")});
+        </script>
+
+        <!-- Mapzen map UI -->
+        <script src='//mapzen.com/common/ui/mapzen-ui.min.js'></script>
+        <script>
+          MPZN.bug();
+        </script>
+    </body>
+</html>
