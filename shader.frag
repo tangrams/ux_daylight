@@ -45,7 +45,7 @@ void main() {
     
     // animation
     vec2 sunVec = u_sun-.5;
-    
+
     // if (u_mouse.x != 0.0 && u_mouse.y != 0.0){
     //     sunVec = u_mouse.xy/u_resolution.y-.5;
     // }
@@ -55,9 +55,8 @@ void main() {
     float radius = length(sunVec);
 
     float azimur = 1.-radius;
-    stars *= radius;
-    float sun = max(1.0 - (1.0 + 10.0 * azimur + z) * length(st - sunVec),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6-azimur);
-    vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 1.0 * pow(azimur,0.04)) * azimur + pow(sun, 4.2) * azimur * (1.0 + SUN_BRIG * azimur))*(1.-z);
+    float sun = max(1.0 - ( 15.0 * azimur + z) * length(st - sunVec),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6-azimur);
+    vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 2.0 * azimur) * azimur + pow(sun, 3.2)  * (1.0 + SUN_BRIG *azimur*azimur))*(1.-z);
     
-    gl_FragColor = vec4(mix(stars,color,azimur),step(0.,z));
+    gl_FragColor = vec4(mix(stars,color,clamp(azimur,0.,1.)),step(0.,z));
 }

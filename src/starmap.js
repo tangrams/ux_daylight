@@ -197,7 +197,8 @@ StarMap.prototype.setPos = function (lat, lon, time) {
                 //                  Math.round(yy - body.size/2 - 1));
                 // }
             } else {
-                body['proj_pos'] = {x: 0.0, y: 0.0};
+                body['proj_pos'] = {x: xx/this.size, y: 1.-yy/this.size};
+                // body['proj_pos'] = {x: 0.0, y: 0.0};
             }
         }
     }

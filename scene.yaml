@@ -44,9 +44,9 @@ layers:
                 order: global.order
                 color: [.5,.5,.5]
             earth_lines:
-                visible: global.order-top
+                order: global.order_add_1
                 color: [0.545, 0.990, 1.000]
-                width: 2px
+                width: 1px
     water:
         data: { source: mapzen }
         draw:
@@ -139,7 +139,7 @@ styles:
                         return texture2D(_tex, uv);
                     }
                 color: |
-                    light_accumulator_ambient = applyEnvmap(u_envmap, normal);
+                    light_accumulator_ambient = vec4(applyEnvmap(u_envmap, normal).rgb*.5,1.);
     earth:
         base: polygons
         raster: custom
