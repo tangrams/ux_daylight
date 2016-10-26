@@ -11,11 +11,9 @@ precision mediump float;
 #define PI 3.1415926535
 #define HALF_PI 1.57079632679
 
-uniform sampler2D u_tex0; // http://patriciogonzalezvivo.github.io/ISS/imgs/earth-clouds-ld.jpg
-uniform vec2 u_tex0Resolution;
-
-uniform vec4 u_date;
+uniform sampler2D u_stars;
 uniform vec2 u_resolution;
+uniform vec2 u_sun;
 uniform vec2 u_mouse;
 uniform float u_time;
 
@@ -33,14 +31,7 @@ vec2 sphereCoords(in vec2 _st, in vec3 _norm) {
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    st = (st-.5)*1.+.5;
-    if (u_resolution.y > u_resolution.x ) {
-        st.y *= u_resolution.y/u_resolution.x;
-        st.y -= (u_resolution.y*.5-u_resolution.x*.5)/u_resolution.x;
-    } else {
-        st.x *= u_resolution.x/u_resolution.y;
-        st.x -= (u_resolution.x*.5-u_resolution.y*.5)/u_resolution.y;
-    }
+    vec3 stars = texture2D(u_stars,st).rgb;
     st -= .5;
     
     float t = u_time*.1;
@@ -51,27 +42,22 @@ void main() {
 
     // NORMALS
     vec3 norm = normalize(vec3(st.x, st.y, z)); // normals from sphere
-    // TEXTURE
-    vec3 clouds = texture2D(u_tex0, fract(sphereCoords(st,norm)-vec2(t*.1,0.))).rgb;
-    clouds -= step(0.500, dot(st,st)*2.);
-    clouds = clamp(clouds,0.,1.);
     
     // animation
-    vec2 sunVec;
-    if (u_mouse.x == 0.0){
-        sunVec = vec2(cos(t),0.)*.5;
-    } else {
-        sunVec = u_mouse.xy/u_resolution.y-.5;
-    }
+    vec2 sunVec = u_sun-.5;
     
-    vec3 color = vec3(0.);
+    // if (u_mouse.x != 0.0 && u_mouse.y != 0.0){
+    //     sunVec = u_mouse.xy/u_resolution.y-.5;
+    // }
+    
 
     float angle = atan(sunVec.y,sunVec.x);
     float radius = length(sunVec);
 
     float azimur = 1.-radius;
+    stars *= radius;
     float sun = max(1.0 - (1.0 + 10.0 * azimur + z) * length(st - sunVec),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6-azimur);
-    color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 1.0 * pow(azimur,0.04)) * azimur + pow(sun, 4.2) * azimur * (1.0 + SUN_BRIG * azimur))*(1.-z);
+    vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 1.0 * pow(azimur,0.04)) * azimur + pow(sun, 4.2) * azimur * (1.0 + SUN_BRIG * azimur))*(1.-z);
     
-    gl_FragColor = vec4(mix(vec3(0.),color,azimur),step(0.,z));
+    gl_FragColor = vec4(mix(stars,color,azimur),step(0.,z));
 }
