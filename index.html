@@ -171,7 +171,9 @@
                         }
                     } else {
                         glslCanvases[0].setUniform('u_sun', 0.0, 0.0);
-                        scene.lights.default_light._direction = [.0,.0,.0];
+                        if (scene && scene.lights && scene.lights.default_light) {
+                            scene.lights.default_light._direction = [.0,.0,.0];
+                        }
                     }
                 }
                

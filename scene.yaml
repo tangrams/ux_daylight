@@ -34,6 +34,7 @@ lights:
         ambient: .0
         diffuse: 1.
         specular: 1.
+        direction: [0.,0.,0.]
 
 layers:
     earth:
@@ -41,7 +42,7 @@ layers:
         draw:
             earth:
                 order: global.order
-                color: gray
+                color: [.5,.5,.5]
             earth_lines:
                 visible: global.order-top
                 color: [0.545, 0.990, 1.000]
