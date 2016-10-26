@@ -147,18 +147,13 @@ styles:
     earth_lines:
         base: lines
         lighting: false
-            
     water:
         base: polygons
         mix: [filter-grid, spheremap]
-        # mix: [elevation-normal, functions-zoom, generative-noise, earth]
         animated: true
         shaders:
             defines:
                 GRID_AMOUNT: .2
-            blocks:
-                normal: | 
-                    normal = vec3(0.,1.,0.);
     boundaries:
         base: lines
         lighting: false
@@ -171,6 +166,11 @@ styles:
     buildings:
         base: polygons
         mix: [geometry-dynamic-height, filter-height, spheremap]
+        material:
+            ambient: 1.
+            diffuse: 1.
+            specular: 1.
+            shininess: .02
         shaders:
             defines:
                 ZOOM_START: 15.0
@@ -178,6 +178,9 @@ styles:
                 HEIGHT: zoom()
                 HEIGHT_MIN: 1.0
                 HEIGHT_MAX: 2.5
+            blocks:
+                color: |
+                    light_accumulator_specular = vec4(applyEnvmap(u_envmap, normal).rgb*.5,1.);
     routes:
         base: lines
         lighting: false
