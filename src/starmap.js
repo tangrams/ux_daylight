@@ -135,8 +135,11 @@ StarMap.prototype.setPos = function (lng, lat, time) {
     this.drawBg();
 
     var ctx = this.ctx;
+
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+
+    // Draw Constelations
     for (j = clen; j--; ) {
         var s = co[j][0], e = co[j][1];
         var so = ortho[s], eo = ortho[e];
@@ -146,16 +149,17 @@ StarMap.prototype.setPos = function (lng, lat, time) {
         }
     }
     
+    // Draw 
     ctx.stroke();
-    
     ctx.strokeStyle = 'rgba(0,0,0,0.6)';
     ctx.fillStyle = '#FFF';
     for (i = 0; i < slen; ++i) {
         var s = ortho[i];
         if (s[3]) {
             ctx.beginPath();
+            ctx.fillStyle = 'rgba(255,255,255,'+Math.abs(s[0]*.1)+')';
             ctx.arc(s[1]+halfsize, halfsize-s[2],
-                    Math.max((s[0])*.1, .1),
+                    Math.abs(s[0]*.1),
                     0, 2*Math.PI, true);
             ctx.fill();
         }

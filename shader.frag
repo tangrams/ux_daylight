@@ -12,50 +12,65 @@ precision mediump float;
 #define HALF_PI 1.57079632679
 
 uniform sampler2D u_stars;
+// uniform vec4 u_date;
 uniform vec2 u_resolution;
-uniform vec2 u_sun;
-uniform vec2 u_mouse;
-uniform float u_time;
 
-#define SUN_BRIG 30.
+uniform vec2 u_sun;
+uniform vec2 u_moon;
+
+#define SUN_BRIG 100.
+#define SUN_RAD 20.
 #define SUN_COLOR vec3(0.7031,0.4687,0.1055)
 #define SKY_COLOR vec3(0.3984,0.5117,0.7305)
 
-vec2 sphereCoords(in vec2 _st, in vec3 _norm) {
-    vec3 vertPoint = _norm;
-    float lat = acos(dot(vec3(0., 1., 0.), _norm));
-    _st.y = lat / PI;
-    _st.x = (acos(dot(_norm, vec3(1, 0, 0)) / sin(lat)))*ONE_OVER_TAU;
-    return _st;
-}
+// http://quasar.as.utexas.edu/BillInfo/JulianDatesG.html
+#define SOLAR_YEAR 365.25
+#define SOLAR_MONTH 30.6001
+#define JULIAN_EPOCH 4712.
+#define SYNODIC_MONTH 29.5305
+
+// float JulianDate() { 
+//     float yy = u_date.x - floor((10.-u_date.y)*.1);
+//     float mm = mod(u_date.y + 9.,12.);
+//     // int k1 = int(SOLAR_YEAR * (yy + JULIAN_EPOCH)); // 2457365.475 TO BIG
+//     int k1 = int(SOLAR_YEAR * (yy - 2003.)) - 4665;
+//     int k2 = int(SOLAR_MONTH * mm + 0.5);
+//     int k3 = int(floor((yy*.01) + 49.) * 0.75) - 38;
+//     return float(k1 + k2 - k3 + 59) + u_date.z;
+// }
+
+// Project a texture into a sphere
+// vec2 sphereCoords(in vec2 _st, in vec3 _norm) {
+//     vec3 vertPoint = _norm;
+//     float lat = acos(dot(vec3(0., 1., 0.), _norm));
+//     _st.y = lat / PI;
+//     _st.x = (acos(dot(_norm, vec3(1, 0, 0)) / sin(lat)))*ONE_OVER_TAU;
+//     return _st;
+// }
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     vec3 stars = texture2D(u_stars,st).rgb;
     st -= .5;
     
-    float t = u_time*.1;
-    
-    // PLANET
-    float r = .5; // radius
-    float z = sqrt(r*r - st.x*st.x - st.y*st.y);
+    // // LIGHT
+    // float moon_phase = fract(((JulianDate()) + 2.944) / SYNODIC_MONTH)*TAU; // Moon fase to radiant
+    // vec3 l = normalize(vec3(cos(moon_phase),0.,sin(moon_phase)));
 
-    // NORMALS
+    // ATMOSPHERE NORMALS
+    float z = sqrt(.25 - dot(st,st));
     vec3 norm = normalize(vec3(st.x, st.y, z)); // normals from sphere
     
     // animation
     vec2 sunVec = u_sun-.5;
 
-    // if (u_mouse.x != 0.0 && u_mouse.y != 0.0){
-    //     sunVec = u_mouse.xy/u_resolution.y-.5;
-    // }
-    
     float angle = atan(sunVec.y,sunVec.x);
     float radius = dot(sunVec,sunVec)*2.;
     stars *= smoothstep(0.,.5,z);
+
     float azimur = 1.-radius;
-    float sun = max(1.0 - ( 15.0 * azimur + z) * length(st - sunVec),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6-azimur);
-    vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 2.0 * azimur) * azimur + pow(sun, 3.2)  * (1.0 + SUN_BRIG *azimur*azimur))*(1.-z);
-    
+    float sun = max(1.0 - (1. + 10.0 * azimur + z) * dot(st - sunVec,st - sunVec)*SUN_RAD,0.0) + 0.3 * pow(1.0-z,12.0) * (1.6*azimur);
+    vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) *  ((0.5 + 2.0 * azimur) * azimur + (sun*sun*sun*sun*sun*sun*sun*sun) * azimur * azimur * (1.0 + SUN_BRIG * azimur * azimur))*(1.-z);
+
     gl_FragColor = vec4(mix(stars,color,clamp(azimur,0.,1.)),step(0.,z));
 }

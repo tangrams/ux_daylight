@@ -48,7 +48,7 @@
                 right: 0px;
                 visibility: hidden;
             }
-            .glslCanvas {
+            #atmosphere {
                 position: absolute;
                 background-color: rgba(1, 1, 1, 0);
                 z-index: 10000;
@@ -60,12 +60,13 @@
     </head>
     <body>
         <canvas id="starmap" width="500" height="500"></canvas>
-        <canvas class="glslCanvas" data-fragment-url="shader.frag" width="500" height="500"></canvas>
+        <canvas id="atmosphere" data-fragment-url="shader.frag" width="500" height="500"></canvas>
         <div id="map"></div>
 
         <!-- Demo module -->
         <script type="text/javascript">
             var starmap = undefined;
+            var atmosphere = undefined;
 
             var map = (function () {
                 'use strict';
@@ -126,7 +127,6 @@
                     // Listen to when the user stop moving (`moveend`) the leaflet map
                     // Note: a debounce function is use to prevent multiple calls to OpenWeatherMaps api
                     map.on('move', update);
-                    map.on('zoomend', update);
 
                     starmap = new StarMap("starmap", 500, REY_STARS60, [], {});
 
@@ -141,14 +141,15 @@
             setTimeout(function(){
                 update();
                 var prevPos = [0,0];
-                glslCanvases[0].on("render", function() {
+                atmosphere = new GlslCanvas(document.getElementById('atmosphere'));
+                atmosphere.on("render", function() {
                     if (scene) {
-                        var pos = [glslCanvases[0].uniforms.u_sun.value[0][0],glslCanvases[0].uniforms.u_sun.value[0][1]];
+                        var pos = [atmosphere.uniforms.u_sun.value[0][0],atmosphere.uniforms.u_sun.value[0][1]];
                         // If the position of the sun had change...
                         if (prevPos[0] !== pos[0] || prevPos[1] !== pos[1]) {
                             // Reload spheretexture from the shader for ambient
                             scene.loadTextures();
-
+                            // console.log('updating textures');
 
                             // UPDATE default_light LIGHT COLOR
                             prevPos = pos;
@@ -162,7 +163,7 @@
 
                             // Extract the pixel of where the sun is
                             var pixel = new Uint8Array(4);
-                            var gl = glslCanvases[0].gl;
+                            var gl = atmosphere.gl;
                             gl.readPixels(  pos[0]*gl.drawingBufferWidth,
                                             pos[1]*gl.drawingBufferHeight,
                                             1,1, 
@@ -181,7 +182,7 @@
              }
 
             function update() {
-                if (glslCanvases.length > 0 ) {
+                if (atmosphere) {
                     var loc = map.getCenter();
                     starmap.setPos(loc.lng, loc.lat,  new Date());
                     var sun = [0,0];
@@ -193,8 +194,9 @@
                     }
 
                     if (scene.lights && scene.lights.default_light) {
-                        glslCanvases[0].setUniform('u_sun', sun[0], sun[1]);
-                        glslCanvases[0].loadTexture('u_starts', starmap.paper);
+                        atmosphere.setUniform('u_sun', sun[0], sun[1]);
+                        atmosphere.loadTexture('u_starts', starmap.paper);
+                        atmosphere.render();
 
                         // If the SUN is visible...
                         if (scene.lights.default_light._direction && visible) {
@@ -203,8 +205,9 @@
                             var normal = vector.scale(-1./vector.len());
                             scene.lights.default_light._direction = [normal.x,normal.y,normal.z];
                         }
-                    } else {
-                        glslCanvases[0].setUniform('u_sun', 0.0, 0.0);
+                    } 
+                    else {
+                        atmosphere.setUniform('u_sun', 0.0, 0.0);
                         if (scene && scene.lights && scene.lights.default_light) {
                             scene.lights.default_light._direction = [.0,.0,.0];
                         }
@@ -217,6 +220,22 @@
                 update();
                 setTimeout(animate, 15000);
             }
+
+            // ============================================= Some Helper functions
+            function debounce(func, wait, immediate) {
+                var timeout;
+                return function() {
+                    var context = this, args = arguments;
+                    var later = function() {
+                        timeout = null;
+                        if (!immediate) func.apply(context, args);
+                    };
+                    var callNow = immediate && !timeout;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                    if (callNow) func.apply(context, args);
+                };
+            };
             
         </script>
 
