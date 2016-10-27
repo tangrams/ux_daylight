@@ -140,25 +140,36 @@
             //code before the pause
             setTimeout(function(){
                 update();
+                var prevPos = [0,0];
                 glslCanvases[0].on("render", function() {
                     if (scene) {
-                        // Reload spheretexture from the shader for ambient
-                        scene.loadTextures();
-
-                        // Set Default_light DIFFUSE COLOR
-                        var pixel = new Uint8Array(4);
-                        var gl = glslCanvases[0].gl;
                         var pos = [glslCanvases[0].uniforms.u_sun.value[0][0],glslCanvases[0].uniforms.u_sun.value[0][1]];
-                        var radius = Math.sqrt(pos[0]*pos[0] + pos[1]*pos[1]);
-                        radius = Math.min(radius,1.);
-                        var angle = Math.atan2(pos[1],pos[0]);
-                        pos = [Math.cos(angle)*radius, Math.sin(angle)*radius];
+                        // If the position of the sun had change...
+                        if (prevPos[0] !== pos[0] || prevPos[1] !== pos[1]) {
+                            // Reload spheretexture from the shader for ambient
+                            scene.loadTextures();
 
-                        gl.readPixels(  pos[0]*gl.drawingBufferWidth,
-                                        pos[1]*gl.drawingBufferHeight,
-                                        1,1, 
-                                        gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-                        scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
+
+                            // UPDATE default_light LIGHT COLOR
+                            prevPos = pos;
+
+                            // Prevent the vector for going under the horizon
+                            var vec = [pos[0]-.5,pos[1]-.5];
+                            var angle = Math.atan2(vec[1],vec[0]);
+                            var radius = Math.sqrt(vec[0]*vec[0] + vec[1]*vec[1]);
+                            radius = Math.min(radius,.48);
+                            pos = [(Math.cos(angle)*radius)+.5, (Math.sin(angle)*radius)+.5];
+
+                            // Extract the pixel of where the sun is
+                            var pixel = new Uint8Array(4);
+                            var gl = glslCanvases[0].gl;
+                            gl.readPixels(  pos[0]*gl.drawingBufferWidth,
+                                            pos[1]*gl.drawingBufferHeight,
+                                            1,1, 
+                                            gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                            scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
+                            // console.log("light color changed to ", pixel);
+                        }
                     }
                 })
             }, 2000);
@@ -169,28 +180,28 @@
                 return n;
              }
 
-
             function update() {
                 if (glslCanvases.length > 0 ) {
                     var loc = map.getCenter();
                     starmap.setPos(loc.lng, loc.lat,  new Date());
                     var sun = [0,0];
+                    var visible = true;
 
                     if (starmap && starmap.bodies && starmap.bodies.sun.proj_pos) {
                         sun = [starmap.bodies.sun.proj_pos.x, 1.-starmap.bodies.sun.proj_pos.y];
+                        visible = starmap.bodies.sun.proj_pos.visible;
                     }
 
                     if (scene.lights && scene.lights.default_light) {
                         glslCanvases[0].setUniform('u_sun', sun[0], sun[1]);
                         glslCanvases[0].loadTexture('u_starts', starmap.paper);
-                        if (scene.lights.default_light._direction) {
-                            // Set Default_light DIRECTION
-                            var vector = [(sun[0]-.5),(sun[1]-.5), 0.0];
-                            vector[2] = Math.sqrt(Math.abs(1.0 - dot(vector,vector)));
-                            vector = [vector[0]*-1.,vector[1]*-1.,vector[2]*-1.];
-                            var length = Math.sqrt(vector[0]*vector[0] + vector[1]*vector[1] + vector[2]*vector[2]);
-                            var normalized = [vector[0] / length, vector[1] / length, vector[2] / length];
-                            scene.lights.default_light._direction = normalized;
+
+                        // If the SUN is visible...
+                        if (scene.lights.default_light._direction && visible) {
+                            sun = [sun[0]-.5,sun[1]-.5];
+                            var vector = new StarJs.Vector.Vector3(sun[0], sun[1], Math.sqrt(Math.abs(1.0 - dot(sun,sun))) );
+                            var normal = vector.scale(-1./vector.len());
+                            scene.lights.default_light._direction = [normal.x,normal.y,normal.z];
                         }
                     } else {
                         glslCanvases[0].setUniform('u_sun', 0.0, 0.0);

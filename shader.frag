@@ -50,10 +50,9 @@ void main() {
     //     sunVec = u_mouse.xy/u_resolution.y-.5;
     // }
     
-
     float angle = atan(sunVec.y,sunVec.x);
-    float radius = length(sunVec);
-
+    float radius = dot(sunVec,sunVec)*2.;
+    stars *= smoothstep(0.,.5,z);
     float azimur = 1.-radius;
     float sun = max(1.0 - ( 15.0 * azimur + z) * length(st - sunVec),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6-azimur);
     vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) * ((0.5 + 2.0 * azimur) * azimur + pow(sun, 3.2)  * (1.0 + SUN_BRIG *azimur*azimur))*(1.-z);

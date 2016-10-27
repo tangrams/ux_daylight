@@ -48,7 +48,7 @@ layers:
         draw:
             water:
                 order: global.order
-                color: [.2,.2,.2]             
+                color: [.1,.15,.2]             
     boundaries:
         data: { source: mapzen }
         draw:
@@ -162,7 +162,7 @@ styles:
         material:
             ambient: 1.
             diffuse: 1.
-            specular: 1.
+            specular: .5
             shininess: .02
         shaders:
             defines:
