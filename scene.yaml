@@ -42,17 +42,13 @@ layers:
         draw:
             earth:
                 order: global.order
-                color: [.5,.5,.5]
-            earth_lines:
-                order: global.order_add_1
-                color: [0.545, 0.990, 1.000]
-                width: 1px
+                color: gray
     water:
         data: { source: mapzen }
         draw:
             water:
                 order: global.order
-                color: gray             
+                color: [.2,.2,.2]             
     boundaries:
         data: { source: mapzen }
         draw:
@@ -144,9 +140,6 @@ styles:
         base: polygons
         raster: custom
         mix: [elevation-normal, spheremap]
-    earth_lines:
-        base: lines
-        lighting: false
     water:
         base: polygons
         mix: [filter-grid, spheremap]

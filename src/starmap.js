@@ -13,14 +13,14 @@ function StarMap (elt, size, stars, cnstltns, prop) {
     // this.planets = (typeof prop.planets === 'undefined') ? true : prop.planets;
     this.bodies = {
         sun: new StarMap.Planet(StarJs.Solar.BODIES.Sun, 20, '#FF0'),
-        // moon: new StarMap.Moon(20, '#880'),
-        mercury: new StarMap.Planet(StarJs.Solar.BODIES.Mercury, .25, '#888'),
-        venus: new StarMap.Planet(StarJs.Solar.BODIES.Venus, .5, '#AAA'),
-        mars: new StarMap.Planet(StarJs.Solar.BODIES.Mars, .5, '#F80'),
-        jupiter: new StarMap.Planet(StarJs.Solar.BODIES.Jupiter, 1, '#FB0'),
-        saturn: new StarMap.Planet(StarJs.Solar.BODIES.Saturn, 1, '#AA0'),
-        uranus: new StarMap.Planet(StarJs.Solar.BODIES.Uranus, 1, '#CAF'),
-        neptune: new StarMap.Planet(StarJs.Solar.BODIES.Neptune, 1, '#CAF')
+        moon: new StarMap.Moon(5, 'rgb(127,127,127)'),
+        mercury: new StarMap.Planet(StarJs.Solar.BODIES.Mercury, 1, '#888'),
+        venus: new StarMap.Planet(StarJs.Solar.BODIES.Venus, 1.5, '#AAA'),
+        mars: new StarMap.Planet(StarJs.Solar.BODIES.Mars, 1.5, '#F80'),
+        // jupiter: new StarMap.Planet(StarJs.Solar.BODIES.Jupiter, 3, '#FB0'),
+        // saturn: new StarMap.Planet(StarJs.Solar.BODIES.Saturn, 3, '#AA0'),
+        // uranus: new StarMap.Planet(StarJs.Solar.BODIES.Uranus, 3, '#CAF'),
+        // neptune: new StarMap.Planet(StarJs.Solar.BODIES.Neptune, 3, '#CAF')
     };
 
     this.stars = stars;
@@ -110,7 +110,7 @@ StarMap.Moon.prototype.getCoord = function (jct, earthPos, equ2ecl) {
 
 StarMap.EARTH = StarJs.Solar.BODIES.Earth;
 
-StarMap.prototype.setPos = function (lat, lon, time) {
+StarMap.prototype.setPos = function (lng, lat, time) {
     var Ti = StarJs.Time;
 
     if (typeof time === 'undefined') {
@@ -124,12 +124,12 @@ StarMap.prototype.setPos = function (lat, lon, time) {
 
     /** @const */
     var DEG2RAD = StarJs.Math.DEG2RAD;
+    lng *= DEG2RAD;
     lat *= DEG2RAD;
-    lon *= DEG2RAD;
 
-    lat += gms_t;
+    lng += gms_t;
 
-    var ortho = stereographicProjectPoints(this.stars, lat, lon, this.size/2);
+    var ortho = stereographicProjectPoints(this.stars, lng, lat, this.size/2);
     var cst = [], i, j, slen = ortho.length, co = this.cnstltns, clen = co.length, halfsize = Math.floor(this.size/2);
     
     this.drawBg();
@@ -170,12 +170,12 @@ StarMap.prototype.setPos = function (lat, lon, time) {
             var body = this.bodies[body_name];
             var cc = body.getCoord(jct, earthPos, equ2ecl);
             
-            var cm = stereographicProjectObj(cc.theta, cc.phi, lat, lon, this.size/2);
-            if (cm[2]) {
-                var xx = cm[0]+halfsize, yy = halfsize-cm[1];
-                body['proj_pos'] = {x: xx/this.size, y: 1.-yy/this.size};
+            var cm = stereographicProjectObj(cc.theta, cc.phi, lng, lat, this.size/2);
+            var xx = halfsize-cm[0];
+            var yy = halfsize-cm[1];
 
-                // if (body.pl.name !== "Sun") 
+            body['proj_pos'] = { x: xx/this.size, y: yy/this.size, visible: cm[2] };
+            if (cm[2]) {
                 {
                     ctx.beginPath();
                     ctx.fillStyle = body.color;
@@ -196,9 +196,6 @@ StarMap.prototype.setPos = function (lat, lon, time) {
                 //                  Math.round(xx + body.size/2 + 1),
                 //                  Math.round(yy - body.size/2 - 1));
                 // }
-            } else {
-                body['proj_pos'] = {x: xx/this.size, y: 1.-yy/this.size};
-                // body['proj_pos'] = {x: 0.0, y: 0.0};
             }
         }
     }

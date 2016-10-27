@@ -66,7 +66,6 @@
         <!-- Demo module -->
         <script type="text/javascript">
             var starmap = undefined;
-            var sun = undefined;
 
             var map = (function () {
                 'use strict';
@@ -148,10 +147,18 @@
 
                         // Set Default_light DIFFUSE COLOR
                         var pixel = new Uint8Array(4);
-                        var gl = glslCanvases[0].gl
-                        gl.readPixels(glslCanvases[0].uniforms.u_sun.value[0][0]*gl.drawingBufferWidth,glslCanvases[0].uniforms.u_sun.value[0][1]*gl.drawingBufferHeight,1,1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                        var gl = glslCanvases[0].gl;
+                        var pos = [glslCanvases[0].uniforms.u_sun.value[0][0],glslCanvases[0].uniforms.u_sun.value[0][1]];
+                        var radius = Math.sqrt(pos[0]*pos[0] + pos[1]*pos[1]);
+                        radius = Math.min(radius,1.);
+                        var angle = Math.atan2(pos[1],pos[0]);
+                        pos = [Math.cos(angle)*radius, Math.sin(angle)*radius];
+
+                        gl.readPixels(  pos[0]*gl.drawingBufferWidth,
+                                        pos[1]*gl.drawingBufferHeight,
+                                        1,1, 
+                                        gl.RGBA, gl.UNSIGNED_BYTE, pixel);
                         scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
-                        // console.log(scene.lights.default_light.diffuse);
                     }
                 })
             }, 2000);
@@ -163,7 +170,7 @@
                     var sun = [0,0];
 
                     if (starmap && starmap.bodies && starmap.bodies.sun.proj_pos) {
-                        sun = [starmap.bodies.sun.proj_pos.x, starmap.bodies.sun.proj_pos.y];
+                        sun = [starmap.bodies.sun.proj_pos.x, 1.-starmap.bodies.sun.proj_pos.y];
                     }
 
                     if (scene.lights && scene.lights.default_light) {
@@ -190,8 +197,6 @@
                 update();
                 setTimeout(animate, 15000);
             }
-
-
             
         </script>
 
