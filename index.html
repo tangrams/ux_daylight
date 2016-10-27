@@ -149,18 +149,15 @@
                         if (prevPos[0] !== pos[0] || prevPos[1] !== pos[1]) {
                             // Reload spheretexture from the shader for ambient
                             scene.loadTextures();
-                            // console.log('updating textures');
 
                             // UPDATE default_light LIGHT COLOR
                             prevPos = pos;
-
                             // Prevent the vector for going under the horizon
                             var vec = [pos[0]-.5,pos[1]-.5];
                             var angle = Math.atan2(vec[1],vec[0]);
                             var radius = Math.sqrt(vec[0]*vec[0] + vec[1]*vec[1]);
                             radius = Math.min(radius,.48);
                             pos = [(Math.cos(angle)*radius)+.5, (Math.sin(angle)*radius)+.5];
-
                             // Extract the pixel of where the sun is
                             var pixel = new Uint8Array(4);
                             var gl = atmosphere.gl;
@@ -168,6 +165,7 @@
                                             pos[1]*gl.drawingBufferHeight,
                                             1,1, 
                                             gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                            // Actually update the color of the light
                             scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
                             // console.log("light color changed to ", pixel);
                         }

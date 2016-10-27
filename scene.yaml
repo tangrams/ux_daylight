@@ -1,5 +1,6 @@
 import:
     - https://tangrams.github.io/blocks/global.yaml
+    - https://tangrams.github.io/blocks/elevation/normal.yaml
     - https://tangrams.github.io/blocks/generative/noise.yaml
     - https://tangrams.github.io/blocks/functions/zoom.yaml
     - https://tangrams.github.io/blocks/filter/height.yaml
