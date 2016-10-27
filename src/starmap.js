@@ -13,7 +13,7 @@ function StarMap (elt, size, stars, cnstltns, prop) {
     // this.planets = (typeof prop.planets === 'undefined') ? true : prop.planets;
     this.bodies = {
         sun: new StarMap.Planet(StarJs.Solar.BODIES.Sun, 20, '#FF0'),
-        moon: new StarMap.Moon(5, 'rgb(127,127,127)'),
+        moon: new StarMap.Moon(20, '#000'),
         mercury: new StarMap.Planet(StarJs.Solar.BODIES.Mercury, 1, '#888'),
         venus: new StarMap.Planet(StarJs.Solar.BODIES.Venus, 1.5, '#AAA'),
         mars: new StarMap.Planet(StarJs.Solar.BODIES.Mars, 1.5, '#F80'),

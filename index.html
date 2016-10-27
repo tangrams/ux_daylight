@@ -142,6 +142,8 @@
                 update();
                 var prevPos = [0,0];
                 atmosphere = new GlslCanvas(document.getElementById('atmosphere'));
+                
+
                 atmosphere.on("render", function() {
                     if (scene) {
                         var pos = [atmosphere.uniforms.u_sun.value[0][0],atmosphere.uniforms.u_sun.value[0][1]];
@@ -184,16 +186,27 @@
                     var loc = map.getCenter();
                     starmap.setPos(loc.lng, loc.lat,  new Date());
                     var sun = [0,0];
+                    var moon = [,]
                     var visible = true;
 
-                    if (starmap && starmap.bodies && starmap.bodies.sun.proj_pos) {
-                        sun = [starmap.bodies.sun.proj_pos.x, 1.-starmap.bodies.sun.proj_pos.y];
-                        visible = starmap.bodies.sun.proj_pos.visible;
+                    if (starmap && starmap.bodies) {
+                        if (starmap.bodies.sun.proj_pos) {
+                            sun = [starmap.bodies.sun.proj_pos.x, 1.-starmap.bodies.sun.proj_pos.y];
+                            visible = starmap.bodies.sun.proj_pos.visible;
+                        }
+
+                        if (starmap.bodies.moon.proj_pos) {
+                            moon = [starmap.bodies.moon.proj_pos.x, 1.-starmap.bodies.moon.proj_pos.y];
+                        }
+                        
                     }
+
 
                     if (scene.lights && scene.lights.default_light) {
                         atmosphere.setUniform('u_sun', sun[0], sun[1]);
+                        atmosphere.setUniform('u_moon', moon[0], moon[1]);
                         atmosphere.loadTexture('u_starts', starmap.paper);
+                        atmosphere.setUniform('u_tex0', './moon.jpg');
                         atmosphere.render();
 
                         // If the SUN is visible...
