@@ -8,61 +8,51 @@ First you need to add the `ux_daylight.js` and `ux_daylight.css` to your HTML do
 
 ```html
 <!-- DayLight Tangram -->
-<link rel="stylesheet" href="ux_daylight.css" />
-<script type="text/javascript" src="ux_daylight.js"></script>
+<link href="https://tangrams.github.io/ux_daylight/ux_daylight.css" rel="stylesheet"/>
+<script src="https://tangrams.github.io/ux_daylight/ux_daylight.js" type="text/javascript"></script>
 ```
 
+Then when you finish adding Tangram as a Leaflet layer you add `uxDaylight` as a Leaflet Control.
 
-Because [Tangram](https://mapzen.com/products/tangram/) is higly configurable this needs a little of wiring on you [`.yaml` scene file](https://mapzen.com/documentation/tangram/Scene-file/).
+```JS
+window.addEventListener('load', function () {
+    // Adding Tangram Layer to map
+    layer.addTo(map);
 
-First you need to import the `ux_language.yaml` to your scene file like this:
+    // Adding DayLight Control
+    map.addControl(L.uxDaylight({ scene: scene }));
+});
+```
+
+Is important that you **DO NOT** define any Light source on your Tangram scene YAML file. Why? Well `ux_daylight` will make use of the default `default_light` on Tangram, which is created when **NO** light is define.
+
+Optionally, you can add a nice ambient efect to your maps by `mix`ing the `ux_daylight` style into your styles that will apply the atmosphere light as a [spheremap](https://mapzen.com/documentation/tangram/Materials-Overview/#mapping-spheremap) to your geometries.
+
+First you need to import the `ux_daylight.yaml` to your scene file like this:
 
 ```yaml
 import:
-    - https://tangrams.github.io/ux_language/ux_language.yaml
-
-...
-
+    - https://tangrams.github.io/ux_daylight/ux_daylight.yaml
 ```
 
-Once there you need to point your labels rules to the function `global.ux_language_text_source` on your `text_source:` nodes. Like this
+Then you can apply it to anything that had normals, like our nice Terrain Normal Raster tiles
 
 ```yaml
-layers:
-    roads:
-        data: { source: mapzen }
-        draw:
-            text:
-                text_source: global.ux_language_text_source
-                font:
-                    family: Helvetica
-                    size: 14px
-                    fill: black
-                    stroke: { color: white, width: 6px }
-```
+sources:
+    osm: 
+        type: TopoJSON
+        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-QF1osLn
+        max_zoom: 16
+    normals:
+        type: Raster
+        url: https://terrain-preview.mapzen.com/normal/{z}/{x}/{y}.png
+        max_zoom: 15
 
-Then is time to load the leaflet pluging it self. For that in the html of you map add:
-
-```html
-    <!-- Language Selector for Tangram -->
-    <link rel="stylesheet" href="https://tangrams.github.io/ux_language/ux_language.css" />
-    <script src="https://tangrams.github.io/ux_language/ux_language.js"></script>
-```
-
-And in the JavaScript section where you load the Leaflet and Tangram maps do:
-
-```javascript
-    // Leafleat Map
-    var map = L.map('map', {maxZoom: 20});
-
-    // Tangram Layer
-    var layer = Tangram.leafletLayer({
-        scene: 'https://tangrams.github.io/tron/tron.yaml',
-        attribution: '&copy; OSM contributors | <a href="https://mapzen.com" target="_blank">Mapzen</a>'
-    }).addTo(map);
-
-    // Now the interesting stuff, the new UxLanguage !!
-    map.addControl(L.uxLanguage({ scene: layer.scene }));
+styles:
+    earth:
+        base: polygons
+        raster: normal
+        mix: [ux_daylight]
 ```
 
 Enjoy!
