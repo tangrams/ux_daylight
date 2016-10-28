@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Atmospheric Scattering</title>
+        <title>ux_daylight</title>
         <!-- 3rd party libraries -->
             <!-- Leaflet -->
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.0.1/leaflet.css" />
@@ -13,16 +13,8 @@
             <script type="text/javascript" src="https://cdn.rawgit.com/mlevans/leaflet-hash/master/leaflet-hash.js"></script>
             <!-- Main tangram library -->
             <script type="text/javascript" src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
-            <!-- Load geocoding plugin after Leaflet -->
-<!--             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.css">
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.js"></script> -->
 
-            <!-- GLSL Canvas -->
-            <script type="text/javascript" src="src/GlslCanvas.js"></script>
-
-            <!-- SunCalc -->
-            <script type="text/javascript" src="src/starjs.min.js"></script>
-
+            <!-- DayLight Tangram -->
             <link rel="stylesheet" href="ux_daylight.css" />
             <script type="text/javascript" src="ux_daylight.js"></script>
 
@@ -95,6 +87,8 @@
 
                 window.addEventListener('load', function () {
                     layer.addTo(map);
+
+                    // Adding DayLight Control
                     map.addControl(L.uxDaylight({ scene: scene }));
                 });
 
