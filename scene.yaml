@@ -6,6 +6,7 @@ import:
     - https://tangrams.github.io/blocks/filter/height.yaml
     - https://tangrams.github.io/blocks/filter/grid.yaml
     - https://tangrams.github.io/blocks/geometry/dynamic-height.yaml
+    - ux_daylight.yaml
 
 sources:
     mapzen: 
@@ -21,10 +22,6 @@ sources:
 scene:
     background:
         color: black
-
-textures:
-    spheremap:
-        element: "#atmosphere"
 
 lights:
     default_light:
@@ -109,33 +106,13 @@ layers:
                     width: [[12,0px],[16,1px],[20, 10m]]
 
 styles:
-    spheremap:
-        material:
-            ambient: 1.
-            diffuse: 1.
-        shaders:
-            uniforms:
-                u_envmap: spheremap
-            blocks:
-                global: |
-                    // Simplified view-independent environment map
-                    vec4 applyEnvmap (in sampler2D _tex, in vec3 _normal) {
-                        const vec3 eye = vec3(0.,0.,-1.);
-                        vec3 r = reflect(eye, _normal);
-                        r.z += 1.0;
-                        float m = 2. * length(r);
-                        vec2 uv = r.xy / m + .5;
-                        return texture2D(_tex, uv);
-                    }
-                color: |
-                    light_accumulator_ambient = vec4(applyEnvmap(u_envmap, normal).rgb*.5,1.);
     earth:
         base: polygons
         raster: custom
-        mix: [elevation-normal, spheremap]
+        mix: [elevation-normal, ux_daylight]
     water:
         base: polygons
-        mix: [filter-grid, spheremap]
+        mix: [filter-grid, ux_daylight]
         animated: true
         shaders:
             defines:
@@ -151,7 +128,7 @@ styles:
                 color: [0.000, 1.000, 0.480]
     buildings:
         base: polygons
-        mix: [geometry-dynamic-height, filter-height, spheremap]
+        mix: [geometry-dynamic-height, filter-height, ux_daylight]
         material:
             ambient: 1.
             diffuse: 1.

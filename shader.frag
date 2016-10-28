@@ -11,8 +11,8 @@ precision mediump float;
 #define PI 3.1415926535
 #define HALF_PI 1.57079632679
 
-uniform sampler2D u_stars;
-uniform sampler2D u_tex0;
+// uniform sampler2D u_stars;
+// uniform sampler2D u_tex0;
 
 uniform vec4 u_date;
 uniform vec2 u_resolution;
@@ -54,7 +54,7 @@ vec2 sphereCoords(in vec2 _st, in vec3 _norm) {
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    vec3 stars = texture2D(u_stars,st).rgb;
+    vec3 stars = vec3(0.0);//texture2D(u_stars,st).rgb;
     st -= .5;
     
     // // LIGHT
@@ -64,8 +64,9 @@ void main() {
     float moon_phase = fract(((JulianDate()) + 2.944) / SYNODIC_MONTH)*TAU; // Moon fase to radiant
     vec3 l = normalize(vec3(-cos(moon_phase),0.,sin(moon_phase)));
     vec3 moon_norm = normalize(vec3(moon_st.x, moon_st.y, sqrt(.25 - moon_st.x*moon_st.x - moon_st.y*moon_st.y)));
-    vec3 moon = texture2D(u_tex0, fract(sphereCoords(moon_st,moon_norm)-vec2(moon_rotation*.1,0.))).rgb;
-    moon = clamp(moon,0.,1.);
+    vec3 moon = vec3(1.)*step(.5,dot(moon_st,moon_st)*2.);
+    // vec3 moon = texture2D(u_tex0, fract(sphereCoords(moon_st,moon_norm)-vec2(moon_rotation*.1,0.))).rgb;
+    // moon = clamp(moon,0.,1.);
     moon *= clamp(dot(moon_norm, l),0.0, 1.);
     stars += moon;
 
@@ -84,5 +85,5 @@ void main() {
     float sun = max(1.0 - (1. + 10.0 * azimur + z) * dot(st - sunVec,st - sunVec)*SUN_RAD,0.0) + 0.3 * pow(1.0-z,12.0) * (1.6*azimur);
     vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) *  ((0.5 + 2.0 * azimur) * azimur + (sun*sun*sun*sun*sun*sun*sun*sun) * azimur * azimur * (1.0 + SUN_BRIG * azimur * azimur))*(1.-z);
 
-    gl_FragColor = vec4(mix(stars,color,clamp(azimur,0.,1.)),step(0.,z));
+    gl_FragColor = vec4(mix(stars, color,clamp(azimur,0.,1.)),step(0.,z));
 }

@@ -21,10 +21,10 @@
             <script type="text/javascript" src="src/GlslCanvas.js"></script>
 
             <!-- SunCalc -->
-            <script type="text/javascript" src="src/suncalc.js"></script>
             <script type="text/javascript" src="src/starjs.min.js"></script>
-            <script type="text/javascript" src="src/constellations-rey60.js"></script>
-            <script type="text/javascript" src="src/starmap.js"></script>
+
+            <link rel="stylesheet" href="ux_daylight.css" />
+            <script type="text/javascript" src="ux_daylight.js"></script>
 
         <!-- End of 3rd party libraries -->
 
@@ -40,39 +40,17 @@
                 width: 100%;
                 position: absolute;
             }
-            #starmap {
-                position: absolute;
-                background-color: rgba(1, 1, 1, 0);
-                z-index: 10000;
-                top: 500px;
-                right: 0px;
-                visibility: hidden;
-            }
-            #atmosphere {
-                position: absolute;
-                background-color: rgba(1, 1, 1, 0);
-                z-index: 10000;
-                top: 0px;
-                right: 0px;
-            }
-
         </style>
     </head>
     <body>
-        <canvas id="starmap" width="500" height="500"></canvas>
-        <canvas id="atmosphere" data-fragment-url="shader.frag" width="500" height="500"></canvas>
         <div id="map"></div>
 
         <!-- Demo module -->
         <script type="text/javascript">
-            var starmap = undefined;
-            var atmosphere = undefined;
-
             var map = (function () {
                 'use strict';
 
                 var map_start_location = [-24.98,-62.53, 3.6];
-
                 /*** URL parsing ***/
 
                 // leaflet-style URL hash pattern:
@@ -82,14 +60,6 @@
                     map_start_location = [url_hash[1],url_hash[2], url_hash[0]];
                     // convert from strings
                     map_start_location = map_start_location.map(Number);
-                }
-
-                var animated = true;
-                var url_search = window.location.search.slice(1);
-                if (url_search.length > 0) {
-                    if (url_search.indexOf('animated=false') > -1) {
-                        animated = false;
-                    }
                 }
 
                 /*** Map ***/
@@ -124,130 +94,12 @@
                 resizeMap();
 
                 window.addEventListener('load', function () {
-                    // Listen to when the user stop moving (`moveend`) the leaflet map
-                    // Note: a debounce function is use to prevent multiple calls to OpenWeatherMaps api
-                    map.on('move', update);
-
-                    starmap = new StarMap("starmap", 500, REY_STARS60, [], {});
-
                     layer.addTo(map);
-                    animate();
+                    map.addControl(L.uxDaylight({ scene: scene }));
                 });
 
                 return map;
             }());
-
-            //code before the pause
-            setTimeout(function(){
-                update();
-                var prevPos = [0,0];
-                atmosphere = new GlslCanvas(document.getElementById('atmosphere'));
-                
-
-                atmosphere.on("render", function() {
-                    if (scene) {
-                        var pos = [atmosphere.uniforms.u_sun.value[0][0],atmosphere.uniforms.u_sun.value[0][1]];
-                        // If the position of the sun had change...
-                        if (prevPos[0] !== pos[0] || prevPos[1] !== pos[1]) {
-                            // Reload spheretexture from the shader for ambient
-                            scene.loadTextures();
-
-                            // UPDATE default_light LIGHT COLOR
-                            prevPos = pos;
-                            // Prevent the vector for going under the horizon
-                            var vec = [pos[0]-.5,pos[1]-.5];
-                            var angle = Math.atan2(vec[1],vec[0]);
-                            var radius = Math.sqrt(vec[0]*vec[0] + vec[1]*vec[1]);
-                            radius = Math.min(radius,.48);
-                            pos = [(Math.cos(angle)*radius)+.5, (Math.sin(angle)*radius)+.5];
-                            // Extract the pixel of where the sun is
-                            var pixel = new Uint8Array(4);
-                            var gl = atmosphere.gl;
-                            gl.readPixels(  pos[0]*gl.drawingBufferWidth,
-                                            pos[1]*gl.drawingBufferHeight,
-                                            1,1, 
-                                            gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-                            // Actually update the color of the light
-                            scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
-                            // console.log("light color changed to ", pixel);
-                        }
-                    }
-                })
-            }, 2000);
-
-             function dot(a,b) {
-                var n = 0, lim = Math.min(a.length,b.length);
-                for (var i = 0; i < lim; i++) n += a[i] * b[i];
-                return n;
-             }
-
-            function update() {
-                if (atmosphere) {
-                    var loc = map.getCenter();
-                    starmap.setPos(loc.lng, loc.lat,  new Date());
-                    var sun = [0,0];
-                    var moon = [,]
-                    var visible = true;
-
-                    if (starmap && starmap.bodies) {
-                        if (starmap.bodies.sun.proj_pos) {
-                            sun = [starmap.bodies.sun.proj_pos.x, 1.-starmap.bodies.sun.proj_pos.y];
-                            visible = starmap.bodies.sun.proj_pos.visible;
-                        }
-
-                        if (starmap.bodies.moon.proj_pos) {
-                            moon = [starmap.bodies.moon.proj_pos.x, 1.-starmap.bodies.moon.proj_pos.y];
-                        }
-                        
-                    }
-
-
-                    if (scene.lights && scene.lights.default_light) {
-                        atmosphere.setUniform('u_sun', sun[0], sun[1]);
-                        atmosphere.setUniform('u_moon', moon[0], moon[1]);
-                        atmosphere.loadTexture('u_starts', starmap.paper);
-                        atmosphere.setUniform('u_tex0', './moon.jpg');
-                        atmosphere.render();
-
-                        // If the SUN is visible...
-                        if (scene.lights.default_light._direction && visible) {
-                            sun = [sun[0]-.5,sun[1]-.5];
-                            var vector = new StarJs.Vector.Vector3(sun[0], sun[1], Math.sqrt(Math.abs(1.0 - dot(sun,sun))) );
-                            var normal = vector.scale(-1./vector.len());
-                            scene.lights.default_light._direction = [normal.x,normal.y,normal.z];
-                        }
-                    } 
-                    else {
-                        atmosphere.setUniform('u_sun', 0.0, 0.0);
-                        if (scene && scene.lights && scene.lights.default_light) {
-                            scene.lights.default_light._direction = [.0,.0,.0];
-                        }
-                    }
-                }
-               
-            }
-
-            function animate() {
-                update();
-                setTimeout(animate, 15000);
-            }
-
-            // ============================================= Some Helper functions
-            function debounce(func, wait, immediate) {
-                var timeout;
-                return function() {
-                    var context = this, args = arguments;
-                    var later = function() {
-                        timeout = null;
-                        if (!immediate) func.apply(context, args);
-                    };
-                    var callNow = immediate && !timeout;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                    if (callNow) func.apply(context, args);
-                };
-            };
-            
         </script>
 
         <!-- Adding a script block to post message to the parent container (think iframed demos) -->

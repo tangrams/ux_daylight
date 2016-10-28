@@ -1,0 +1,25 @@
+textures:
+    spheremap:
+        element: "#ux_daylight"
+
+styles:
+    ux_daylight:
+        material:
+            ambient: 1.
+            diffuse: 1.
+        shaders:
+            uniforms:
+                u_envmap: spheremap
+            blocks:
+                global: |
+                    // Simplified view-independent environment map
+                    vec4 applyEnvmap (in sampler2D _tex, in vec3 _normal) {
+                        const vec3 eye = vec3(0.,0.,-1.);
+                        vec3 r = reflect(eye, _normal);
+                        r.z += 1.0;
+                        float m = 2. * length(r);
+                        vec2 uv = r.xy / m + .5;
+                        return texture2D(_tex, uv);
+                    }
+                color: |
+                    light_accumulator_ambient = vec4(applyEnvmap(u_envmap, normal).rgb*.5,1.);
