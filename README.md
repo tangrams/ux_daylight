@@ -1,5 +1,7 @@
 # Ux Daylight for [Tangram](https://mapzen.com/products/tangram/)
 
+![](ux_daylight-00.gif)
+
 [TangramJS](https://mapzen.com/products/tangram/) is an incredible 2D/3D Map engine that contain a felixble [lighting](https://mapzen.com/documentation/tangram/Lights-Overview/) and [material](https://mapzen.com/documentation/tangram/Materials-Overview/) system. This little addon automatically set the default lights to the actual position of the sun on a give place. At the same time allows you to add the current atmosphere scattering sphere as a [spheremap](https://mapzen.com/documentation/tangram/Materials-Overview/#mapping-spheremap) to the styles.
 
 ## how it works?
@@ -54,5 +56,7 @@ styles:
         raster: normal
         mix: [ux_daylight]
 ```
+
+![](ux_daylight-01.gif)
 
 Enjoy!
