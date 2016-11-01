@@ -44,9 +44,10 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
-    "glslCanvas": "^0.0.17",
+    "anytime": "^1.4.2",
     "babel": "^5.8.29",
     "babel-runtime": "5.8.29",
+    "glslCanvas": "^0.0.17",
     "xhr": "^2.2.0"
   },
   "browserify-shim": {}

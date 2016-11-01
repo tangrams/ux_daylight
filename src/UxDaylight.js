@@ -3,6 +3,7 @@ import { StarJs } from './vendor/starjs.min.js';
 import GlslCanvas from 'glslCanvas';
 
 import { stereoProject } from './astro.js';
+import anytime from 'anytime';
 
 L.UxDaylight = L.Control.extend({
     options: {
@@ -11,7 +12,9 @@ L.UxDaylight = L.Control.extend({
         scene: null,
         open: false,
         min_size: 26,
-        size: 260
+        toolbar_size: 30,
+        size: 260,
+        time: "now"
     },
 
     initialize: function(options) {
@@ -24,7 +27,10 @@ L.UxDaylight = L.Control.extend({
         var min_size = this.options.min_size;
         var scene = this.options.scene;
         var open_state = this.options.open;
+        var toolbar_size = this.options.toolbar_size;
         var prev_sun_pos = [0,0];
+        var time = this.options.time;
+
         var bodies = {
             sun: StarJs.Solar.BODIES.Sun,
             moon: { 
@@ -41,18 +47,44 @@ L.UxDaylight = L.Control.extend({
             return new StarJs.Vector.Polar3(equ2ecl.apply(pos.sub(earthPos)))
         }
 
+        var toolbar =  L.DomUtil.create('div', 'ux_daylight-toolbar', container);
+        toolbar.style.height = toolbar_size+'px';
+
         var icon =  L.DomUtil.create('img', 'ux_daylight-icon', container);
         icon.src = 'ux_daylight.png';
         icon.addEventListener('click', function(){
             if (open_state) {
                 container.style.width = min_size+'px';
                 container.style.height = min_size+'px';
+                toolbar.style.visibility = 'hidden';
             } else {
                 container.style.width = (size+20)+'px';
-                container.style.height = (size+20)+'px';
+                container.style.height = (size+20+toolbar_size)+'px';
+                toolbar.style.visibility = 'visible';
             }
             open_state = !open_state;
-        });
+        });     
+
+        // toolbar.appendChild(document.createTextNode("Time:"));
+        var date =  L.DomUtil.create('input', 'ux_daylight-date', toolbar);
+
+        var date_picker =  L.DomUtil.create('button', 'ux_daylight-date_picker', toolbar);
+        date_picker.appendChild(document.createTextNode("choose"));
+
+        var p = new anytime({input:date, button: date_picker, anchor: date, initialValue: new Date(), format: 'hh:mm DD/MM/YY' });
+        p.render();
+        p.on('change', function (d) {
+            time = d;
+            console.log('The new date/time is…', time);
+        })
+
+        var date_now =  L.DomUtil.create('button', 'ux_daylight-date_now', toolbar);
+        date_now.appendChild(document.createTextNode("now"));
+        date_now.onclick = function() {
+            p.update(new Date());
+            date.value = p.value;
+            time = 'now';
+        }
 
         var canvas =  L.DomUtil.create('canvas', 'ux_daylight-spheremap', container);
         canvas.setAttribute('id', 'ux_daylight');
@@ -139,7 +171,6 @@ void main() {
 
     gl_FragColor = vec4(mix(stars, color,clamp(azimur,0.,1.)),step(0.,z));
 }
-
         `)
         shader.on("render", function() {
             if (scene && scene.lights) {
@@ -177,9 +208,10 @@ void main() {
         });
 
         function updateLight() {
+            var t = (time === "now" || time === "")? new Date() : p.value;
             var loc = map.getCenter();
-            var sun = stereoProject(bodies.sun, size, loc.lng, loc.lat, new Date());
-            var moon = stereoProject(bodies.moon, size, loc.lng, loc.lat, new Date());
+            var sun = stereoProject(bodies.sun, size, loc.lng, loc.lat, t);
+            var moon = stereoProject(bodies.moon, size, loc.lng, loc.lat, t);
 
             if (scene && scene.lights && scene.lights.default_light) {
                 shader.setUniform('u_sun', sun.x, sun.y);

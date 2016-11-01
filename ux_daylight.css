@@ -13,7 +13,7 @@
     position: absolute;
     background-color: rgba(1, 1, 1, 0);
     /*z-index: 10000;*/
-    top: 10px;
+    bottom: 10px;
     left: 10px;
     /*width: 500px;*/
     /*height: 500px;*/
@@ -29,4 +29,79 @@
     height: 20px;
     z-index: 100;
     text-overflow: '';
+}
+
+.ux_daylight-toolbar {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-left: 15px;
+    padding-right: 5px;
+    width: 85%;
+    visibility: hidden;
+}
+
+.anytime-picker { 
+    display: none; 
+    position: absolute; 
+    padding: 5px;
+    border-color: lightgray;
+    border-width: 1px;
+    border-style: solid;
+    z-index: 400;
+    background-color: white;
+}
+
+.anytime-picker__footer, .anytime-picker__header {
+    padding: 5px;
+    text-align: center;
+}
+
+.anytime-picker__footer .anytime-picker__button, .anytime-picker__footer .anytime-picker__dropdown, .anytime-picker__header .anytime-picker__button, .anytime-picker__header .anytime-picker__dropdown {
+    margin: 3px 2px;
+    vertical-align: middle;
+}
+
+.anytime-picker__dropdown {
+    display: inline-block;
+    height: 24px;
+    margin: 0 3px;
+    width: auto;
+}
+
+.anytime-picker--is-visible { 
+    display: block; 
+}
+
+.anytime-picker__dates { 
+    width: 200px; 
+}
+
+.anytime-picker__dates > * { 
+    box-sizing: border-box;
+    width: 14.28%;
+    display: inline-block;
+}
+
+.anytime-picker__dates .anytime-picker__date, .anytime-picker__dates span {
+    display: inline-block;
+    padding: 2px 0px;
+    width: 14.28571%;
+}
+.anytime-picker__date {
+    background: #ddd;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #fff;
+    color: #333;
+    cursor: pointer;
+    position: relative;
+    text-align: center;
+    transition: background-color .4s ease,color .4s ease;
+}
+
+.anytime-picker__time {
+    padding: 2px 0px;
+    text-align: center;
 }
