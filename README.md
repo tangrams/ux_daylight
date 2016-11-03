@@ -4,8 +4,6 @@
 
 [TangramJS](https://mapzen.com/products/tangram/) is an incredible 2D/3D Map engine that contain a felixble [lighting](https://mapzen.com/documentation/tangram/Lights-Overview/) and [material](https://mapzen.com/documentation/tangram/Materials-Overview/) system. This little addon automatically set the default lights to the actual position of the sun on a give place. At the same time allows you to add the current atmosphere scattering sphere as a [spheremap](https://mapzen.com/documentation/tangram/Materials-Overview/#mapping-spheremap) to the styles.
 
-![](ux_daylight.jpg)
-
 ## how it works?
 
 First you need to add the `ux_daylight.js` and `ux_daylight.css` to your HTML document
@@ -59,6 +57,6 @@ styles:
         mix: [ux_daylight]
 ```
 
-![](ux_daylight-01.gif)
+![](ux_daylight.jpg)
 
 Enjoy!
