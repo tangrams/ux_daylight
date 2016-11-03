@@ -8,9 +8,9 @@ import anytime from 'anytime';
 L.UxDaylight = L.Control.extend({
     options: {
         position: 'topleft',
-        icon: 'ux_daylight.png',
-        icon_stars: 'ux_stars.png',
-        icon_const: 'ux_const.png',
+        icon: 'https://tangrams.github.io/ux_daylight/ux_daylight.png',
+        icon_stars: 'https://tangrams.github.io/ux_daylight/ux_stars.png',
+        icon_const: 'https://tangrams.github.io/ux_daylight/ux_const.png',
         scene: null,
         time: "now",
         sun_size: 20,
