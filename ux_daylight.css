@@ -10,15 +10,10 @@
 }
 
 .ux_daylight-spheremap {
-    position: absolute;
     background-color: rgba(1, 1, 1, 0);
-    /*z-index: 10000;*/
-    bottom: 10px;
-    left: 10px;
-    /*width: 500px;*/
-    /*height: 500px;*/
     width: 100%;
     height: 100%;
+    margin: 10px;
 }
 
 .ux_daylight-icon {
@@ -32,15 +27,12 @@
 }
 
 .ux_daylight-toolbar {
-    position: absolute;
-    top: 3px;
-    right: 3px;
+    margin-top: 5px;
     margin-left: 0px;
     margin-right: 0px;
-    padding-left: 15px;
+    padding-left: 31px;
     padding-right: 5px;
     width: 85%;
-    visibility: hidden;
 }
 
 .anytime-picker { 

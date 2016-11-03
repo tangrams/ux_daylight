@@ -2,7 +2,7 @@
 import { StarJs } from './vendor/starjs.min.js';
 import GlslCanvas from 'glslCanvas';
 
-import { stereoProject } from './astro.js';
+import { stereoProject, stereoProjectStars } from './astro.js';
 import anytime from 'anytime';
 
 L.UxDaylight = L.Control.extend({
@@ -11,10 +11,13 @@ L.UxDaylight = L.Control.extend({
         icon: 'ux_daylight.png',
         scene: null,
         open: false,
-        min_size: 26,
+        icon_size: 26,
         toolbar_size: 30,
         size: 260,
-        time: "now"
+        time: "now",
+        sun_size: 20,
+        moon: true,
+        stars: true
     },
 
     initialize: function(options) {
@@ -22,13 +25,19 @@ L.UxDaylight = L.Control.extend({
     },
 
     onAdd: function(map) {
-        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom ux_daylight-container');
+        // GLOBAL VARIABLES
+        // -------------------------------------------------------------
         var size = this.options.size;
-        var min_size = this.options.min_size;
+        var halfsize = Math.floor(size/2);
         var scene = this.options.scene;
-        var open_state = this.options.open;
+        
+        var state_open = this.options.open;
+        var state_moon =this.options.moon;
+        var state_stars =this.options.stars;
+
+        var icon_size = this.options.icon_size;
         var toolbar_size = this.options.toolbar_size;
-        var prev_sun_pos = [0,0];
+    
         var time = this.options.time;
 
         var bodies = {
@@ -47,37 +56,48 @@ L.UxDaylight = L.Control.extend({
             return new StarJs.Vector.Polar3(equ2ecl.apply(pos.sub(earthPos)))
         }
 
-        var toolbar =  L.DomUtil.create('div', 'ux_daylight-toolbar', container);
-        toolbar.style.height = toolbar_size+'px';
+        // CONTAINER
+        // -------------------------------------------------------------
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom ux_daylight-container');
+        container.addEventListener('mousedown', function(){
+            map.dragging.disable();
+        });
 
+        container.addEventListener('mouseup', function(){
+            map.dragging.enable();
+        });
+
+        // ICON
+        // -------------------------------------------------------------
         var icon =  L.DomUtil.create('img', 'ux_daylight-icon', container);
         icon.src = 'ux_daylight.png';
         icon.addEventListener('click', function(){
-            if (open_state) {
-                container.style.width = min_size+'px';
-                container.style.height = min_size+'px';
-                toolbar.style.visibility = 'hidden';
+            if (state_open) {
+                container.style.width = icon_size+'px';
+                container.style.height = icon_size+'px';
             } else {
                 container.style.width = (size+20)+'px';
                 container.style.height = (size+20+toolbar_size)+'px';
-                toolbar.style.visibility = 'visible';
             }
-            open_state = !open_state;
-        });     
+            state_open = !state_open;
+        });
 
-        // toolbar.appendChild(document.createTextNode("Time:"));
+    
+        // TOOLBAR
+        // -------------------------------------------------------------
+        var toolbar =  L.DomUtil.create('div', 'ux_daylight-toolbar', container);
+        toolbar.style.height = toolbar_size+'px';
+
+        // Date/time selection
         var date =  L.DomUtil.create('input', 'ux_daylight-date', toolbar);
-
         var date_picker =  L.DomUtil.create('button', 'ux_daylight-date_picker', toolbar);
         date_picker.appendChild(document.createTextNode("choose"));
-
         var p = new anytime({input:date, button: date_picker, anchor: date, initialValue: new Date(), format: 'hh:mm DD/MM/YY' });
         p.render();
         p.on('change', function (d) {
             time = d;
             console.log('The new date/time is…', time);
         })
-
         var date_now =  L.DomUtil.create('button', 'ux_daylight-date_now', toolbar);
         date_now.appendChild(document.createTextNode("now"));
         date_now.onclick = function() {
@@ -86,7 +106,9 @@ L.UxDaylight = L.Control.extend({
             time = 'now';
         }
 
-        var canvas =  L.DomUtil.create('canvas', 'ux_daylight-spheremap', container);
+        // CANVAS
+        // -------------------------------------------------------------
+        var canvas = L.DomUtil.create('canvas', 'ux_daylight-spheremap', container);
         canvas.setAttribute('id', 'ux_daylight');
         canvas.style.width = size+'px';
         canvas.style.height = size+'px';
@@ -94,7 +116,7 @@ L.UxDaylight = L.Control.extend({
 
         var shader = new GlslCanvas(canvas);
         shader.load(`
-            // Atmosphere scattering + Moon phase
+// Atmosphere scattering + Moon phase
 // Patricio Gonzalez Vivo @patriciogv 2016
 
 #ifdef GL_ES
@@ -107,14 +129,15 @@ precision mediump float;
 #define PI 3.1415926535
 #define HALF_PI 1.57079632679
 
+uniform sampler2D u_stars;
 uniform vec4 u_date;
 uniform vec2 u_resolution;
 
 uniform vec2 u_sun;
+uniform float u_sun_size;
 uniform vec2 u_moon;
 
 uniform vec2 u_mouse;
-
 uniform float u_time;
 
 #define MOON_RAD 25.
@@ -141,7 +164,7 @@ float JulianDate() {
 
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    vec3 stars = vec3(0.0);//texture2D(u_stars,st).rgb;
+    vec3 stars = texture2D(u_stars,st).rgb;
     st -= .5;
     
     // // LIGHT
@@ -166,12 +189,13 @@ void main() {
     stars *= smoothstep(0.,.5,z);
 
     float azimur = 1.-radius;
-    float sun = max(1.0 - (1. + 10.0 * azimur + z) * dot(st - sunVec,st - sunVec)*SUN_RAD,0.0) + 0.3 * pow(1.0-z,12.0) * (1.6*azimur);
+    float sun = max(1.0 - (1. + 10.0 * azimur + z) * dot(st - sunVec,st - sunVec)*(SUN_RAD-u_sun_size),0.0) + 0.3 * pow(1.0-z,12.0) * (1.6*azimur);
     vec3 color = mix(SKY_COLOR, SUN_COLOR, sun) *  ((0.5 + 2.0 * azimur) * azimur + (sun*sun*sun*sun*sun*sun*sun*sun) * azimur * azimur * (1.0 + SUN_BRIG * azimur * azimur))*(1.-z);
 
     gl_FragColor = vec4(mix(stars, color,clamp(azimur,0.,1.)),step(0.,z));
 }
         `)
+        var prev_sun_pos = [0,0];
         shader.on("render", function() {
             if (scene && scene.lights) {
                 if (scene.lights.default_light && scene.lights.default_light.diffuse &&
@@ -207,16 +231,32 @@ void main() {
             }
         });
 
-        function updateLight() {
-            var t = (time === "now" || time === "")? new Date() : p.value;
-            var loc = map.getCenter();
-            var sun = stereoProject(bodies.sun, size, loc.lng, loc.lat, t);
-            var moon = stereoProject(bodies.moon, size, loc.lng, loc.lat, t);
+        var stars_canvas = L.DomUtil.create('canvas', 'ux_daylight-starmap', container);
+        stars_canvas.style.width = size+'px';
+        stars_canvas.style.height = size+'px';
+        stars_canvas.setAttribute('width', size+'px');
+        stars_canvas.setAttribute('height', size+'px');
+        var ctx = stars_canvas.getContext("2d");
 
+        // Sun Slider
+        var sun_range =  L.DomUtil.create('input', 'ux_daylight-sun-slider', toolbar);
+        sun_range.setAttribute('type', 'range');
+        sun_range.setAttribute('min', '1');
+        sun_range.setAttribute('max', '19.5');
+        sun_range.setAttribute('value', '18');
+        sun_range.setAttribute('step', '.1');
+        sun_range.addEventListener('input', function(e) {
+            shader.setUniform('u_sun_size', parseFloat(e.target.value));
+        })
+
+        function updateLight() {
             if (scene && scene.lights && scene.lights.default_light) {
+                var t = (time === "now" || time === "")? new Date() : p.value;
+                var loc = map.getCenter();
+
+                var sun = stereoProject(bodies.sun, size, loc.lng, loc.lat, t);
                 shader.setUniform('u_sun', sun.x, sun.y);
-                shader.setUniform('u_moon', moon.x, moon.y);
-                shader.render();
+                shader.setUniform('u_sun_size', parseFloat(sun_range.value));
 
                 // If the SUN is visible...
                 if (scene.lights.default_light._direction && sun.visible) {
@@ -225,7 +265,42 @@ void main() {
                     var normal = vector.scale(-1./vector.len());
                     scene.lights.default_light._direction = [normal.x,normal.y,normal.z];
                 }
-            } 
+
+                if (state_moon) {
+                    var moon = stereoProject(bodies.moon, size, loc.lng, loc.lat, t);
+                    shader.setUniform('u_moon', moon.x, moon.y);
+                }
+
+                if (state_stars) {
+                    // Draw stars in other canvas
+                    var stars =  stereoProjectStars(size, loc.lng, loc.lat, t);
+                    var starsTotal = stars.length;
+                    // Draw Background
+                    ctx.clearRect(0,0,size,size);
+                    ctx.fillStyle='rgba(0,0,0,0)';
+                    ctx.fillRect(0,0,size,size);
+                    ctx.beginPath();
+                    ctx.fillStyle = "#000010";
+                    ctx.arc(halfsize, halfsize, halfsize, 0, 2*Math.PI, true);
+                    ctx.fill();
+                    // Draw stars
+                    ctx.stroke();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                    ctx.fillStyle = '#FFF';
+                    for (var i = 0; i < starsTotal; ++i) {
+                        var s = stars[i];
+                        if (s[3]) {
+                            ctx.beginPath();
+                            ctx.fillStyle = 'rgba(255,255,255,'+Math.abs(s[0]*.1)+')';
+                            ctx.arc(halfsize-s[1], halfsize-s[2], Math.abs(s[0]*.2), 0, 2*Math.PI, true);
+                            ctx.fill();
+                        }
+                    }
+                    shader.loadTexture('loadTexture', stars_canvas);
+                }
+                
+                shader.render();
+            }             
             else {
                 console.log('Tangram is loading...');
             }
