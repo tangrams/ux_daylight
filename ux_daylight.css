@@ -9,13 +9,6 @@
     overflow: hidden;
 }
 
-.ux_daylight-spheremap {
-    background-color: rgba(1, 1, 1, 0);
-    width: 100%;
-    height: 100%;
-    margin: 10px;
-}
-
 .ux_daylight-icon {
     position: absolute;
     top: 3px;
@@ -26,6 +19,13 @@
     text-overflow: '';
 }
 
+.ux_daylight-spheremap {
+    background-color: rgba(1, 1, 1, 0);
+    width: 100%;
+    height: 100%;
+    margin: 10px;
+}
+
 .ux_daylight-toolbar {
     margin-top: 5px;
     margin-left: 0px;
@@ -33,6 +33,10 @@
     padding-left: 31px;
     padding-right: 5px;
     width: 85%;
+}
+
+.ux_daylight-sun-slider {
+    width: 92%;
 }
 
 .anytime-picker { 
