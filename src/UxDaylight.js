@@ -274,6 +274,7 @@ void main() {
         sun_range.setAttribute('step', '.1');
         sun_range.addEventListener('input', function(e) {
             shader.setUniform('u_sun_size', parseFloat(e.target.value));
+            shader.render();
         })
 
         function updateLight() {
