@@ -355,9 +355,7 @@ void main() {
             updateLight();
             setTimeout(tick, 1000);
         }
-
-        // this.starmap = new StarMap("starmap", 500, REY_STARS60, [], {});
-
+        
         map.on('move', updateLight);
 
         tick();
