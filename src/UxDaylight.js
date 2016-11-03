@@ -2,22 +2,21 @@
 import { StarJs } from './vendor/starjs.min.js';
 import GlslCanvas from 'glslCanvas';
 
-import { stereoProject, stereoProjectStars } from './astro.js';
+import { stereoProject, stereoProjectStars, constellations } from './astro.js';
 import anytime from 'anytime';
 
 L.UxDaylight = L.Control.extend({
     options: {
         position: 'topleft',
         icon: 'ux_daylight.png',
+        icon_stars: 'ux_stars.png',
+        icon_const: 'ux_const.png',
         scene: null,
-        open: false,
-        icon_size: 26,
-        toolbar_size: 30,
-        size: 260,
         time: "now",
         sun_size: 20,
         moon: true,
-        stars: true
+        stars: true,
+        constellations: false
     },
 
     initialize: function(options) {
@@ -27,19 +26,18 @@ L.UxDaylight = L.Control.extend({
     onAdd: function(map) {
         // GLOBAL VARIABLES
         // -------------------------------------------------------------
-        var size = this.options.size;
+        var icon_size = 26;
+        var toolbar_size = 30;
+        var size = 260;
         var halfsize = Math.floor(size/2);
-        var scene = this.options.scene;
-        
-        var state_open = this.options.open;
-        var state_moon =this.options.moon;
-        var state_stars =this.options.stars;
 
-        var icon_size = this.options.icon_size;
-        var toolbar_size = this.options.toolbar_size;
-    
         var time = this.options.time;
-
+        var scene = this.options.scene;
+        var state_open = false;
+        var state_moon = this.options.moon;
+        var state_stars = this.options.stars;
+        var state_constellations = this.options.constellations;
+        
         var bodies = {
             sun: StarJs.Solar.BODIES.Sun,
             moon: { 
@@ -69,19 +67,47 @@ L.UxDaylight = L.Control.extend({
 
         // ICON
         // -------------------------------------------------------------
+        var constellations_icon = this.options.icon_const;
+        var stars_icon = this.options.icon_stars;
+        var icon_sc =  L.DomUtil.create('img', 'ux_daylight-icon-sc', container);
+        icon_sc.src = constellations_icon;
+        icon_sc.addEventListener('click', function(){
+            if (!state_stars) {
+                state_stars = true;
+                state_constellations = false;
+                icon_sc.style.opacity = 1.;
+                icon_sc.src = constellations_icon;
+            }
+            else if (!state_constellations) {
+                state_stars = true;
+                state_constellations = true;
+                icon_sc.src = stars_icon;
+                icon_sc.style.opacity = .5;
+            }
+            else {
+                
+                state_stars = false;
+                state_constellations = false;
+                icon_sc.src = stars_icon;
+                icon_sc.style.opacity = 1.;
+                console.log('no stars no const')
+            }
+        });
+
         var icon =  L.DomUtil.create('img', 'ux_daylight-icon', container);
-        icon.src = 'ux_daylight.png';
+        icon.src = this.options.icon;
         icon.addEventListener('click', function(){
             if (state_open) {
                 container.style.width = icon_size+'px';
                 container.style.height = icon_size+'px';
+                icon_sc.style.visibility = 'hidden';
             } else {
                 container.style.width = (size+20)+'px';
                 container.style.height = (size+20+toolbar_size)+'px';
+                icon_sc.style.visibility = 'visible';
             }
             state_open = !state_open;
         });
-
     
         // TOOLBAR
         // -------------------------------------------------------------
@@ -225,9 +251,10 @@ void main() {
                         scene.lights.default_light.diffuse = [pixel[0]/255,pixel[1]/255,pixel[2]/255];
                         // console.log("light color changed to ", pixel);
                     }
-                } else {
-                    console.log("uxDaylight: leave deafult lights on tangram");
-                }
+                } 
+                // else {
+                //     console.log("uxDaylight: leave deafult lights on tangram");
+                // }
             }
         });
 
@@ -271,34 +298,51 @@ void main() {
                     shader.setUniform('u_moon', moon.x, moon.y);
                 }
 
+                // Draw Background
+                ctx.clearRect(0,0,size,size);
+                ctx.fillStyle='rgba(0,0,0,0)';
+                ctx.fillRect(0,0,size,size);
+                ctx.beginPath();
+                ctx.fillStyle = "#000010";
+                ctx.arc(halfsize, halfsize, halfsize, 0, 2*Math.PI, true);
+                ctx.fill();
+
                 if (state_stars) {
                     // Draw stars in other canvas
                     var stars =  stereoProjectStars(size, loc.lng, loc.lat, t);
                     var starsTotal = stars.length;
-                    // Draw Background
-                    ctx.clearRect(0,0,size,size);
-                    ctx.fillStyle='rgba(0,0,0,0)';
-                    ctx.fillRect(0,0,size,size);
-                    ctx.beginPath();
-                    ctx.fillStyle = "#000010";
-                    ctx.arc(halfsize, halfsize, halfsize, 0, 2*Math.PI, true);
-                    ctx.fill();
+
                     // Draw stars
-                    ctx.stroke();
-                    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
                     ctx.fillStyle = '#FFF';
-                    for (var i = 0; i < starsTotal; ++i) {
+                    for (let i = 0; i < starsTotal; ++i) {
                         var s = stars[i];
                         if (s[3]) {
                             ctx.beginPath();
                             ctx.fillStyle = 'rgba(255,255,255,'+Math.abs(s[0]*.1)+')';
-                            ctx.arc(halfsize-s[1], halfsize-s[2], Math.abs(s[0]*.2), 0, 2*Math.PI, true);
+                            ctx.arc(halfsize-s[1], halfsize-s[2], Math.abs(s[0]*.1), 0, 2*Math.PI, true);
                             ctx.fill();
                         }
                     }
-                    shader.loadTexture('loadTexture', stars_canvas);
+
+                    if (state_constellations && constellations) {
+                        var constellationsTotal = constellations.length;
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+                        // Draw Constelations
+                        for (let j = constellationsTotal; j--; ) {
+                            var s = constellations[j][0];
+                            var e = constellations[j][1];
+                            var so = stars[s], eo = stars[e];
+                            if (so[3] || eo[3]) {
+                                ctx.moveTo((halfsize-so[1]), (halfsize-so[2]));
+                                ctx.lineTo((halfsize-eo[1]), (halfsize-eo[2]));
+                            }
+                        }
+                        ctx.stroke();
+                    }
                 }
-                
+
+                shader.loadTexture('loadTexture', stars_canvas);
                 shader.render();
             }             
             else {

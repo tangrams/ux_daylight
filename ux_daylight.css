@@ -19,6 +19,16 @@
     text-overflow: '';
 }
 
+.ux_daylight-icon-sc {
+    position: absolute;
+    bottom: 9px;
+    right: 9px;
+    width: 32px;
+    height: 32px;
+    z-index: 99;
+    visibility: hidden;
+}
+
 .ux_daylight-spheremap {
     background-color: rgba(1, 1, 1, 0);
     width: 100%;
