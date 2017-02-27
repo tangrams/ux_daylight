@@ -41,13 +41,17 @@ Then you can apply it to anything that had normals, like our nice Terrain Normal
 
 ```yaml
 sources:
-    osm: 
+    mapzen:
         type: TopoJSON
-        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-QF1osLn
+        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
+        url_params:
+            api_key: mapzen-QF1osLn
         max_zoom: 16
     normals:
         type: Raster
-        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png?api_key=mapzen-QF1osLn
+        url: https://tile.mapzen.com/mapzen/terrain/v1/normal/{z}/{x}/{y}.png
+        url_params:
+            api_key: mapzen-QF1osLn
         max_zoom: 15
 
 styles:
